@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Survey Query {{ query_position }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background-color: #fff;
+      padding: 20px 40px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 5px;
+      position: relative;
+    }
+    h1, h2, p {
+      text-align: center;
+      color: #333;
+    }
+    .progress {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-gap: 20px;
+      margin-bottom: 20px;
+    }
+    .grid-item {
+      border: 1px solid #ccc;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      background-color: #f9f9f9;
+      transition: background-color 0.3s ease;
+      border-radius: 4px;
+    }
+    .grid-item.selected {
+      background-color: #a8d5e2;
+    }
+    .nav-btn, .pause-btn {
+      display: inline-block;
+      margin: 20px 10px 0;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .nav-btn:hover, .pause-btn:hover {
+      background-color: #45a049;
+    }
+    .pause-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 90%;
+      max-width: 600px;
+      border-radius: 5px;
+      text-align: center;
+    }
+    .modal-content input[type="range"] {
+      width: 100%;
+      margin-top: 20px;
+    }
+    .modal-content input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .modal-content button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .modal-content button:hover {
+      background-color: #45a049;
+    }
+    .modal-content label {
+      font-size: 16px;
+      display: block;
+      margin-top: 10px;
+    }
+    #enlargeDoc {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-top: 10px;
+      text-align: left;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      user-select: text !important;
+    }
+    .debug-panel {
+      background-color: #f8f9fa;
+      padding: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      display: none;
+    }
+    .debug-btn {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      z-index: 1000;
+      opacity: 0.5;
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- Debug panel -->
+  <div class="debug-panel" id="debugInfo" style="display: none;">
+    <h3>Debug Information</h3>
+    <p>Query Position: {{ query_position }}</p>
+    <p>Query ID (Database): {{ query_id }}</p>
+    <p>Query Content: {{ query_content }}</p>
+    <p>Documents: {{ docs|length }} items</p>
+    <button onclick="document.getElementById('debugData').style.display = document.getElementById('debugData').style.display === 'none' ? 'block' : 'none';">
+      Show/Hide Detailed Data
+    </button>
+    <div id="debugData" style="display: none;">
+      <pre>{{ docs|tojson }}</pre>
+    </div>
+  </div>
+
+  <div class="container">
+    <button class="pause-btn" onclick="pauseSurvey()">Pause</button>
+    <div class="progress">Progress: Query {{ query_position }} of {{ total_queries }}</div>
+    <br>
+    <br>
+    <p>Task: Please click on <strong>all documents</strong> that you judge to be relevant to the following query. When you click a document, a pop-up window will appear. In the pop-up, please select the passage of document text that supports your decision.</p>
+    <h2>Query: {{ query_content }}</h2>
+    
+    <!-- Document grid -->
+    <div class="grid-container">
+      {% if docs and docs|length > 0 %}
+        {% for doc in docs %}
+          <div class="grid-item"
+               data-docno="{{ doc.docno|string }}"
+               data-fulltext="{{ doc.content|e if doc.content else 'Document content is empty'|e }}"
+               onclick="openEnlargeModal(this)">
+            <p class="doc-content">{{ doc.content|truncate(500) if doc.content else 'Document content is empty' }}</p>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div style="grid-column: span 3; text-align: center; padding: 50px 0;">
+          <p>No documents found related to this query.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <div style="text-align: center;">
+      {% if query_position > 1 %}
+      <button class="nav-btn" onclick="goBack()">Back</button>
+      {% endif %}
+      <button class="nav-btn" onclick="submitQuery()">Next</button>
+    </div>
+  </div>
+
+  <!-- Bot verification modal - Note: using query_position here -->
+  {% if query_position == 1 %}
+  <div id="botModal" class="modal">
+    <div class="modal-content">
+      <h2>Bot Verification</h2>
+      <p id="botText"></p>
+      <input type="range" id="botSlider" min="0" max="100" value="0">
+      <label id="sliderValue">0</label>
+      <button id="botVerify">Verify</button>
+    </div>
+  </div>
+  {% endif %}
+
+<!-- Attention check modal and document enlarge modal remain unchanged -->
+
+  <!-- Attention check modal -->
+  <div id="attentionModal" class="modal">
+    <div class="modal-content">
+      <h2>Attention Check</h2>
+      <p id="attentionQuestion"></p>
+      <input type="text" id="attentionAnswer" placeholder="Your answer here...">
+      <button id="attentionSubmit">Submit</button>
+    </div>
+  </div>
+
+  <!-- Document enlarge modal -->
+  <div id="enlargeModal" class="modal">
+    <div class="modal-content">
+      <h2>Document Passage Selection</h2>
+      <h3 id="enlargeQuery">{{ query_content }}</h3>
+      <div id="enlargeDoc"></div>
+      <button onclick="submitPassageSelection()">Confirm Selection</button>
+      <button onclick="cancelPassageSelection()">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    let lastEventTime = Date.now();
+    let currentQid = {{ qid }};
+    let currentPosition = {{ query_position }};
+    let totalQueries = {{ total_queries }};
+    let currentDocno = null;
+    let selectedDocs = JSON.parse(sessionStorage.getItem("selected_docs_qid_" + currentQid)) || [];
+    
+    function logEvent(data){
+      let now = Date.now();
+      let duration = now - lastEventTime;
+      lastEventTime = now;
+      
+      let payload = {
+        userId: "{{ user_id }}",
+        qid: currentQid,
+        docno: data.docno || "",
+        eventType: data.eventType || "",
+        startIndex: data.startIndex !== undefined ? data.startIndex : -1,
+        endIndex: data.endIndex !== undefined ? data.endIndex : -1,
+        duration: data.duration !== undefined ? data.duration : duration,
+        passFlag: data.passFlag !== undefined ? data.passFlag : 0
+      };
+      
+      fetch('/api/log', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      }).then(r => r.json()).catch(err => console.error("Log error:", err));
+    }
+
+    window.addEventListener('load', function() {
+      let passageHighlights = JSON.parse(sessionStorage.getItem("passage_highlight_qid_" + currentQid)) || {};
+      for (let docno in passageHighlights) {
+        let item = document.querySelector('.grid-item[data-docno="' + docno + '"]');
+        if (item) {
+          item.classList.add('selected');
+          item.querySelector(".doc-content").innerHTML = passageHighlights[docno];
+        }
+      }
+    });
+
+    function openEnlargeModal(element) {
+      let docno = element.getAttribute('data-docno');
+      
+      if (selectedDocs.includes(String(docno))) {
+        let confirmMsg = "This document has already been selected. Do you want to update your selection or remove it?\n\nClick 'OK' to update your selection.\nClick 'Cancel' to remove this document.";
+        let updateSelection = confirm(confirmMsg);
+        
+        if (!updateSelection) {
+          // Remove selection
+          element.classList.remove('selected');
+          selectedDocs = selectedDocs.filter(n => String(n) !== String(docno));
+          sessionStorage.setItem("selected_docs_qid_" + currentQid, JSON.stringify(selectedDocs));
+          
+          // Delete saved text highlight
+          let passageHighlights = JSON.parse(sessionStorage.getItem("passage_highlight_qid_" + currentQid)) || {};
+          delete passageHighlights[docno];
+          sessionStorage.setItem("passage_highlight_qid_" + currentQid, JSON.stringify(passageHighlights));
+          
+          // Restore original text
+          let originalText = element.getAttribute('data-fulltext');
+          element.querySelector(".doc-content").innerText = originalText.substring(0, 500);
+          
+          logEvent({ docno: docno, eventType: "UNSELECT" });
+        } else {
+          // User chooses to update text selection
+          currentDocno = docno;
+          let fullText = element.getAttribute('data-fulltext');
+          logEvent({ docno: docno, eventType: "UPDATE_SELECTION" });
+          document.getElementById("enlargeDoc").innerText = fullText;
+          document.getElementById("enlargeModal").style.display = "block";
+        }
+      } else {
+        // Document not selected, open document enlarge modal
+        currentDocno = docno;
+        let fullText = element.getAttribute('data-fulltext');
+        logEvent({ docno: docno, eventType: "OPEN_DOC" });
+        document.getElementById("enlargeDoc").innerText = fullText;
+        document.getElementById("enlargeModal").style.display = "block";
+      }
+    }
+
+    // Cancel document passage selection
+    function cancelPassageSelection() {
+      logEvent({ docno: currentDocno, eventType: "CANCEL_DOC" });
+      document.getElementById("enlargeModal").style.display = "none";
+    }
+
+    // Submit document passage selection
+    function submitPassageSelection() {
+      let enlargeDocElem = document.getElementById("enlargeDoc");
+      let rawFullText = enlargeDocElem.innerText;
+      let rawSelectedText = window.getSelection().toString();
+      
+      console.debug("Raw full text length:", rawFullText.length);
+      console.debug("Raw selected text:", rawSelectedText);
+      
+      if (!rawSelectedText.trim()) {
+        alert("Please select a portion of the text before submitting.");
+        return;
+      }
+      
+      // To reduce matching failures due to newline and space differences, unify whitespace processing
+      function unifyWhitespace(str) {
+        return str.replace(/\r/g, "").replace(/\s+/g, " ").trim();
+      }
+      
+      let cleanFullText = unifyWhitespace(rawFullText);
+      let cleanSelected = unifyWhitespace(rawSelectedText);
+      
+      console.debug("Clean full text length:", cleanFullText.length);
+      console.debug("Clean selected text:", cleanSelected);
+      
+      let startIndex = cleanFullText.indexOf(cleanSelected);
+      if (startIndex === -1) {
+        alert("Could not find the selected text in the document. Try selecting again.");
+        return;
+      }
+      
+      let endIndex = startIndex + cleanSelected.length;
+      logEvent({
+        docno: currentDocno,
+        eventType: "PASSAGE_SELECTION",
+        startIndex: startIndex,
+        endIndex: endIndex
+      });
+      
+      // Save state to sessionStorage
+      let selectedDocs = JSON.parse(sessionStorage.getItem("selected_docs_qid_" + currentQid)) || [];
+      if (!selectedDocs.includes(currentDocno)) {
+        selectedDocs.push(currentDocno);
+        sessionStorage.setItem("selected_docs_qid_" + currentQid, JSON.stringify(selectedDocs));
+      }
+      
+      let highlighted = rawFullText.substring(0, startIndex)
+                       + "<mark>" + rawFullText.substring(startIndex, endIndex) + "</mark>"
+                       + rawFullText.substring(endIndex);
+                       
+      let passageHighlights = JSON.parse(sessionStorage.getItem("passage_highlight_qid_" + currentQid)) || {};
+      passageHighlights[currentDocno] = highlighted;
+      sessionStorage.setItem("passage_highlight_qid_" + currentQid, JSON.stringify(passageHighlights));
+      
+      let item = document.querySelector('.grid-item[data-docno="' + currentDocno + '"]');
+      if (item) {
+        item.classList.add('selected');
+        item.querySelector(".doc-content").innerHTML = highlighted;
+      }
+      
+      document.getElementById("enlargeModal").style.display = "none";
+    }
+
+    // Page navigation function modified to use query position
+    function navigatePage(target) {
+      logEvent({ eventType: "PAGE_NAV" });
+      if (target === 'next') {
+        window.location.href = currentPosition < totalQueries 
+          ? "/query/" + (currentPosition + 1) 
+          : "/thanks";
+      } else {
+        window.location.href = "/query/" + (currentPosition - 1);
+      }
+    }
+    
+    function submitQuery() {
+      navigatePage('next');
+    }
+    
+    function goBack() {
+      navigatePage('back');
+    }
+    
+    function pauseSurvey() {
+      logEvent({ eventType: "PAGE_NAV" });
+      window.location.href = "/pause?query=" + currentPosition;
+    }
+
+    // Bot detection - Using query position and first visit flag
+    console.debug("Checking bot detection, query position =", currentPosition);
+    {% if query_position == 1 %}
+      console.debug("Bot detection should be active");
+      
+      // If first visit, ensure botChecked is reset
+      {% if is_first_visit %}
+        console.debug("First visit to this query, resetting bot verification");
+        sessionStorage.removeItem("botChecked");
+      {% endif %}
+      
+      let botThreshold = Math.floor(Math.random() * 99) + 1;
+      console.debug("Bot threshold set to:", botThreshold);
+      
+      // Ensure elements exist before operating
+      if (document.getElementById("botText") && document.getElementById("botModal")) {
+        document.getElementById("botText").innerText = "Please slide the slider to at least " + botThreshold + " to confirm you are human.";
+        
+        // Check verification status in session storage
+        if (sessionStorage.getItem("botChecked") === "true") {
+          console.debug("User already verified, hiding bot modal");
+          document.getElementById("botModal").style.display = "none";
+          lastEventTime = Date.now();
+        } else {
+          console.debug("User not verified, showing bot modal");
+          document.getElementById("botModal").style.display = "block";
+        }
+        
+        let botDetectionStart = Date.now();
+        const botSlider = document.getElementById("botSlider");
+        const sliderValueLabel = document.getElementById("sliderValue");
+        
+        if (botSlider && sliderValueLabel) {
+          botSlider.addEventListener("input", function(){
+            sliderValueLabel.textContent = botSlider.value;
+          });
+        }
+        
+        if (document.getElementById("botVerify")) {
+          document.getElementById("botVerify").addEventListener("click", function(){
+            if (parseInt(botSlider.value) >= botThreshold) {
+              let botDetectionDuration = Date.now() - botDetectionStart;
+              logEvent({ 
+                eventType: "BOT_DETECTION", 
+                passFlag: 1,
+                duration: botDetectionDuration
+              });
+              sessionStorage.setItem("botChecked", "true");
+              document.getElementById("botModal").style.display = "none";
+              lastEventTime = Date.now();
+            } else {
+              alert("Please slide the slider further (at least to " + botThreshold + ") to verify you are human.");
+            }
+          });
+        }
+      } else {
+        console.error("Bot detection elements not found in DOM");
+      }
+    {% else %}
+      console.debug("Bot detection not active for this query position");
+    {% endif %}
+
+    // Attention check
+    const attentionChecks = [
+      { question: "Please answer: What is your favorite color? (Answer 'Navy')", correctAnswer: "Navy" },
+      { question: "Type the word 'Banana' exactly as shown.", correctAnswer: "Banana" },
+      { question: "Please type 'Elephant' if you read carefully.", correctAnswer: "Elephant" },
+      { question: "What is 2+2? (Answer '4')", correctAnswer: "4" },
+      { question: "Answer 'Blue' to: What color do you see?", correctAnswer: "Blue" },
+      { question: "Enter the secret word 'Sunshine'.", correctAnswer: "Sunshine" },
+      { question: "Type 'Correct' to confirm you read the instructions.", correctAnswer: "Correct" },
+      { question: "Answer 'Yes, I have read it'.", correctAnswer: "Yes, I have read it" },
+      { question: "If you read instructions, type 'Confirmed'.", correctAnswer: "Confirmed" },
+      { question: "If paying attention, answer 'Verified'.", correctAnswer: "Verified" }
+    ];
+    
+    function showAttentionCheck() {
+      let randomIndex = Math.floor(Math.random() * attentionChecks.length);
+      let selectedCheck = attentionChecks[randomIndex];
+      document.getElementById("attentionQuestion").innerText = selectedCheck.question;
+      document.getElementById("attentionModal").setAttribute("data-question", selectedCheck.question);
+      document.getElementById("attentionModal").setAttribute("data-correct", selectedCheck.correctAnswer);
+      document.getElementById("attentionModal").style.display = "block";
+    }
+    
+    setTimeout(function(){
+      showAttentionCheck();
+    }, 720000);
+    
+    document.getElementById("attentionSubmit").addEventListener("click", function(){
+      let userAnswer = document.getElementById("attentionAnswer").value.trim();
+      let correctAnswer = document.getElementById("attentionModal").getAttribute("data-correct");
+      if (userAnswer === correctAnswer) {
+        logEvent({ eventType: "ATTENTION_CHECK", passFlag: 1 });
+        document.getElementById("attentionModal").style.display = "none";
+        lastEventTime = Date.now();
+      } else {
+        alert("Your answer is incorrect. Please read carefully.");
+        logEvent({ eventType: "ATTENTION_CHECK", passFlag: 0 });
+      }
+    });
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a01e9e94fd037711',t:'MTc3OTgxNzc5Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

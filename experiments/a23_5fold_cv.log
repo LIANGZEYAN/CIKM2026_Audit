@@ -1,0 +1,89 @@
+========================================================================================
+A2 + A3 — 5-fold CV for α (CIKM 2026 resubmission)
+========================================================================================
+
+Step 1/9: Load + dedupe historical pool ...
+  After dedup: 4505 rows, 53 qids, docs/qid mean=85.0
+
+Step 2/9: PBM-simulate clicks (seed=505, total=1e6) ...
+  Simulated clicks total: 999,998
+
+Step 3/9: Build click-anchor map (top-3 by real_clicks) ...
+  Real-click anchor map: 53 qids, event total=7,116
+
+Step 4/9: Build ColBERT-anchor map (top-3 by historical score) ...
+  ColBERT anchor map: 53 qids
+
+Step 5/9: SimCSE embed every (qid, docno) text in full pool ...
+  SimCSE on device: cuda
+    embedded 32/4505
+    embedded 672/4505
+    embedded 1312/4505
+    embedded 1952/4505
+    embedded 2592/4505
+    embedded 3232/4505
+    embedded 3872/4505
+    embedded 4505/4505
+  Embedded 4505 docs
+
+Step 6/9: Compute semantic_sim_clicks and semantic_sim_colbert ...
+  click-anchored sim: mean=0.5830, colbert-anchored sim: mean=0.5719
+
+Step 7/9: Build RD over displayed audit-grid docs ...
+  Displayed grid: 477 rows over 53 qids (should be ~9 docs × 53 qids = 477)
+  RD stats: mean=1.0585, median=0.9164, high(>1.5)=89/477
+
+Step 8/9: Make 5 folds ...
+  Fold 0: n=11, qids=[596569, 1104447, 1113361]...[112700, 845121, 395948]
+  Fold 1: n=11, qids=[253263, 707882, 226975]...[935353, 1118716, 493490]
+  Fold 2: n=11, qids=[300025, 505390, 832573]...[764738, 835760, 1040198]
+  Fold 3: n=10, qids=[818583, 1110996, 23287]...[661905, 1117243, 300986]
+  Fold 4: n=10, qids=[647362, 540006, 1129560]...[806694, 1128632, 1006728]
+  Qrels: 53 unique qids, 10828 judgements
+
+Step 9/9: 5-fold CV for A2 (RD-stability) and A3 (nDCG grid) ...
+
+  --- Fold 0: train=42, test=11 ---
+    A2 best α (RD-stability on train) = 2.8980
+    A3 best α (nDCG@10 grid on train, ColBERT anchor) = 2.4000
+    A2 held-out: @1=0.7576 @3=0.7522 @5=0.7086 @10=0.6420 @30=0.5867 @50=0.5410 @100=0.4489
+    A3 held-out: @1=0.6364 @3=0.7312 @5=0.6766 @10=0.6326 @30=0.5784 @50=0.5376 @100=0.4452
+
+  --- Fold 1: train=42, test=11 ---
+    A2 best α (RD-stability on train) = 2.8980
+    A3 best α (nDCG@10 grid on train, ColBERT anchor) = 3.4000
+    A2 held-out: @1=0.8030 @3=0.7196 @5=0.7113 @10=0.6863 @30=0.5510 @50=0.4877 @100=0.4040
+    A3 held-out: @1=0.7121 @3=0.6852 @5=0.6643 @10=0.6372 @30=0.5252 @50=0.4742 @100=0.3915
+
+  --- Fold 2: train=42, test=11 ---
+    A2 best α (RD-stability on train) = 2.7449
+    A3 best α (nDCG@10 grid on train, ColBERT anchor) = 4.1000
+    A2 held-out: @1=0.5758 @3=0.5863 @5=0.5820 @10=0.5798 @30=0.5406 @50=0.5037 @100=0.4284
+    A3 held-out: @1=0.4848 @3=0.5387 @5=0.5774 @10=0.5594 @30=0.5217 @50=0.4815 @100=0.4155
+
+  --- Fold 3: train=43, test=10 ---
+    A2 best α (RD-stability on train) = 2.8980
+    A3 best α (nDCG@10 grid on train, ColBERT anchor) = 2.4000
+    A2 held-out: @1=0.6167 @3=0.6519 @5=0.6509 @10=0.6265 @30=0.5203 @50=0.4415 @100=0.3339
+    A3 held-out: @1=0.5500 @3=0.6206 @5=0.6470 @10=0.6252 @30=0.5160 @50=0.4351 @100=0.3305
+
+  --- Fold 4: train=43, test=10 ---
+    A2 best α (RD-stability on train) = 2.8980
+    A3 best α (nDCG@10 grid on train, ColBERT anchor) = 2.4000
+    A2 held-out: @1=0.7167 @3=0.7141 @5=0.6509 @10=0.5797 @30=0.4661 @50=0.4094 @100=0.3234
+    A3 held-out: @1=0.6500 @3=0.6753 @5=0.6235 @10=0.5686 @30=0.4723 @50=0.4051 @100=0.3212
+
+========================================================================================
+POOLED HELD-OUT RESULTS (5-fold CV; each query held-out once)
+========================================================================================
+Variant  α (mean±sd)    α range        @1     @3     @5     @10    @30    @50    @100  
+---------------------------------------------------------------------------------------
+A2       2.867±0.068    [2.74,2.90]    0.6950 0.6849 0.6611 0.6236 0.5344 0.4786 0.3899
+A3       2.940±0.780    [2.40,4.10]    0.6069 0.6503 0.6378 0.6049 0.5238 0.4685 0.3829
+
+Reference (paper Table 1, IPSsimRF α=2.6429 in-sample):
+IPSsimRF 2.6429         [2.64,2.64]    0.6824 0.6897 0.6648 0.6227 0.5341 0.4786 0.3900
+
+Saved: /mnt/primary/cikm 2026/experiments/a23_per_fold.csv
+Saved: /mnt/primary/cikm 2026/experiments/a23_pooled.csv
+Saved: /mnt/primary/cikm 2026/experiments/a23_table_rows.tex

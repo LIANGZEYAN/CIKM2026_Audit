@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Academic Research Survey</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background-color: #fff;
+      padding: 40px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 5px;
+    }
+    form div {
+      margin-bottom: 15px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    input[type="checkbox"] {
+      margin-right: 10px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Document Relevance Study</h1>
+    <ul style="text-align: left;">
+      <p>In this study, you will be asked to judge the relevance of documents with respect to a search engine query. You will be presented with a query and a set of 9 documents for which you will be asked to select <b>all documents</b> that are relevant to the query. For each document that you select as being relevant, you will be asked to highlight the passage of the text in the document that makes it relevant to the query. In total, you will be presented with xx queries each with 9 candidate documents.</p>
+      <p>We expect this study to take 30 minutes to complete. You may wish to take a short break during this time. The system has a pause button in the top right corner of the following pages. If you take a break during the study, please press the pause button to record that you are having a break. You should press the start button when you recommence.</p>
+      <p>Your participation in this study is voluntary, and you may withdraw from the study at any time prior to completion for any reason. No personal data will be recorded through the study web pages. The only data that will be recorded relating to your participation in this study is the data the crowdsourcing platform collects and handles.</p>
+      <p>This research study is being conducted by researchers at [ANONYMIZED INSTITUTION] and has been approved by the institutional ethics committee.</p>
+    </ul>
+
+    <form method="post">
+      <div>
+        <input type="checkbox" name="terms" value="accepted" required> I have read and understood the above, and I consent to participate in this experiment.
+      </div>
+      <div>
+        <label for="user_id">Thank You for participating in this study. Please enter your User ID below and press submit when you are ready to start the study:</label>
+        <input type="text" name="user_id" id="user_id" required>
+      </div>
+      <div class="error">{{ error or "" }}</div>
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a01e9e8ebd9b8a0e',t:'MTc3OTgxNzc5Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
