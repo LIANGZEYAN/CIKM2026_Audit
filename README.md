@@ -1,4 +1,4 @@
-# Paper title
+# Paper
 
 Transforming User Actions into Audit Signals: Participatory Auditing to Improve Search Results
 
