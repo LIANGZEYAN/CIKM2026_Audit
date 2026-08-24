@@ -1,6 +1,4 @@
-# Paper
-
-Transforming User Actions into Audit Signals: Participatory Auditing to Improve Search Results
+# Transforming User Actions into Audit Signals: Participatory Auditing to Improve Search Results
 
 ## Installation
 
