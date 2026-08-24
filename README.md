@@ -1,6 +1,6 @@
-# Implementation of CIKM2026#XXXXX
+# Paper title
 
-Implementation of CIKM2026#XXXXX
+Transforming User Actions into Audit Signals: Participatory Auditing to Improve Search Results
 
 ## Installation
 
