@@ -252,4 +252,18 @@ in that script — see its module docstring), so no separate file is needed.
 
 Zeyan Liang, Graham McDonald, and Iadh Ounis. 2026. Transforming User Actions into Audit Signals: Participatory Auditing to Improve Search Results. In Proceedings of the 35th ACM International Conference on Information and Knowledge Management (CIKM ’26), November 07–11, 2026, Rome, Italy. ACM, New York, NY, USA, 12 pages. https://doi.org/10.1145/3799682.3840885
 
+@inproceedings{liang2026transforming,
+  author    = {Liang, Zeyan and McDonald, Graham and Ounis, Iadh},
+  title     = {Transforming User Actions into Audit Signals: Participatory Auditing to Improve Search Results},
+  booktitle = {Proceedings of the 35th ACM International Conference on Information and Knowledge Management},
+  series    = {CIKM '26},
+  year      = {2026},
+  location  = {Rome, Italy},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  numpages  = {12},
+  doi       = {10.1145/3799682.3840885},
+  url       = {https://doi.org/10.1145/3799682.3840885}
+}
+
 
