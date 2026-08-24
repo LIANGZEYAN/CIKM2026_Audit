@@ -250,4 +250,6 @@ in that script — see its module docstring), so no separate file is needed.
 
 ## Citation
 
-[Citation information will be added after publication]
+Zeyan Liang, Graham McDonald, and Iadh Ounis. 2026. Transforming User Actions into Audit Signals: Participatory Auditing to Improve Search Results. In Proceedings of the 35th ACM International Conference on Information and Knowledge Management (CIKM ’26), November 07–11, 2026, Rome, Italy. ACM, New York, NY, USA, 12 pages. https://doi.org/10.1145/3799682.3840885
+
+
